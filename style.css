@@ -1,0 +1,59 @@
+body {
+  background-color: #111;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
+}
+
+input, button {
+  padding: 10px;
+  margin: 5px;
+  width: 90%;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+button {
+  background-color: #e10600;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #b50000;
+}
+
+.lights {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.light {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #333;
+  border: 2px solid #555;
+}
+
+.on {
+  background-color: red;
+}
+
+.green.on {
+  background-color: green;
+}
+
+#ranking {
+  list-style: none;
+  padding: 0;
+}
