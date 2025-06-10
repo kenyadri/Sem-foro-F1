@@ -1,74 +1,62 @@
-const form = document.getElementById('playerForm');
-const game = document.getElementById('game');
-const msg = document.getElementById('msg');
-const lights = ['l1','l2','l3','l4'].map(id => document.getElementById(id));
-const rankingList = document.getElementById('ranking');
+let form = document.getElementById("playerForm");
+let game = document.getElementById("game");
+let lights = [1,2,3,4,5].map(i => document.getElementById("l" + i));
+let msg = document.getElementById("msg");
+let ranking = document.getElementById("ranking");
 
-let startTime, canClick = false;
-let nickname = "", email = "";
+let startTime, ready = false;
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  nickname = document.getElementById('nickname').value;
-  email = document.getElementById('email').value;
-  form.style.display = 'none';
-  game.style.display = 'block';
-  startSemaforo();
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    form.style.display = "none";
+    game.style.display = "block";
+    startSequence();
 });
 
-function startSemaforo() {
-  msg.textContent = "Listo en...";
-  lights.forEach(l => { l.classList.remove('on'); });
-  
-  const base = 500;
-  const interval = 800;
-  const rndExtra = Math.random() * 2000; // entre 0 y 2000 ms extra
-  const totalDelay = base + rndExtra;
+function startSequence() {
+    lights.forEach(l => l.classList.remove("on"));
+    msg.textContent = "Prepárate...";
 
-  // encender rojos secuenciales
-  lights.slice(0,3).forEach((l, i) => {
+    // Encender luces una por una cada 1 segundo
+    lights.forEach((light, i) => {
+        setTimeout(() => light.classList.add("on"), i * 1000);
+    });
+
+    // Apagar todas después de tiempo aleatorio (2 a 4s después del último encendido)
+    let randomDelay = Math.floor(Math.random() * 3000) + 2000;
     setTimeout(() => {
-      l.classList.add('on');
-    }, base + i * interval);
-  });
-
-  // encender verde al final
-  setTimeout(() => {
-    lights[3].classList.add('on');
-    msg.textContent = "¡YA!";
-    canClick = true;
-    startTime = performance.now();
-  }, totalDelay + 2 * interval);
+        lights.forEach(l => l.classList.remove("on"));
+        msg.textContent = "¡YA!";
+        startTime = new Date().getTime();
+        ready = true;
+    }, 5000 + randomDelay);
 }
 
-game.addEventListener('click', () => {
-  if (!canClick) {
-    msg.textContent = "¡Te adelantaste!";
-    setTimeout(() => location.reload(), 1500);
-    return;
-  }
+document.body.addEventListener("click", () => {
+    if (!ready) return;
 
-  const reactionTime = (performance.now() - startTime).toFixed(2);
-  msg.textContent = `Tu tiempo: ${reactionTime} ms`;
+    let reactionTime = new Date().getTime() - startTime;
+    msg.textContent = `⏱️ Tiempo de reacción: ${reactionTime} ms`;
+    ready = false;
 
-  saveResult(nickname, reactionTime);
-  showRanking();
-  canClick = false;
+    // Guardar en ranking local
+    const name = document.getElementById("playerName").value;
+    const score = { name, reactionTime };
+    const scores = JSON.parse(localStorage.getItem("scores") || "[]");
+    scores.push(score);
+    scores.sort((a, b) => a.reactionTime - b.reactionTime);
+    localStorage.setItem("scores", JSON.stringify(scores.slice(0, 5)));
+    renderRanking();
 });
 
-function saveResult(name, time) {
-  const scores = JSON.parse(localStorage.getItem("ranking") || "[]");
-  scores.push({ name, time: parseFloat(time), email });
-  scores.sort((a,b) => a.time - b.time);
-  localStorage.setItem("ranking", JSON.stringify(scores.slice(0,10)));
+function renderRanking() {
+    const scores = JSON.parse(localStorage.getItem("scores") || "[]");
+    ranking.innerHTML = "";
+    scores.forEach(s => {
+        let li = document.createElement("li");
+        li.textContent = `${s.name}: ${s.reactionTime} ms`;
+        ranking.appendChild(li);
+    });
 }
 
-function showRanking() {
-  const scores = JSON.parse(localStorage.getItem("ranking") || "[]");
-  rankingList.innerHTML = "";
-  scores.forEach((s, idx) => {
-    rankingList.innerHTML += `<li>#${idx+1} - ${s.name}: ${s.time} ms</li>`;
-  });
-}
-
-showRanking();
+renderRanking();
